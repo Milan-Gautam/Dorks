@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bug Bounty Search Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #0d0d0d;
+            --panel:     #141414;
+            --border:    #2a2a2a;
+            --border-hi: #444;
+            --accent:    #c8ff00;
+            --accent2:   #ff6b35;
+            --text:      #e2e2e2;
+            --muted:     #666;
+            --mono:      'IBM Plex Mono', monospace;
+            --sans:      'IBM Plex Sans', sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* ── top bar ── */
+        .topbar {
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo-block {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.04em;
+            line-height: 1.3;
+        }
+        .logo-block small {
+            display: block;
+            color: var(--muted);
+            font-weight: 400;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .tag {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 3px 8px;
+            border-radius: 2px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .tag.warn {
+            color: var(--accent2);
+            border-color: rgba(255,107,53,0.4);
+        }
+
+        /* ── hero ── */
+        .hero {
+            padding: 52px 28px 36px;
+            max-width: 900px;
+        }
+        .hero h1 {
+            font-family: var(--sans);
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
+            font-weight: 700;
+            line-height: 1.15;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+        .hero h1 em {
+            font-style: normal;
+            color: var(--accent);
+        }
+        .hero p {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 0.9rem;
+            max-width: 540px;
+            line-height: 1.6;
+        }
+
+        /* ── input zone ── */
+        .input-zone {
+            padding: 0 28px 40px;
+        }
+        .input-zone label {
+            display: block;
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            color: var(--muted);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .input-row {
+            display: flex;
+            align-items: stretch;
+            max-width: 580px;
+            border: 1px solid var(--border-hi);
+            background: var(--panel);
+        }
+        .input-row:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(200,255,0,0.08);
+        }
+        .input-pre {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--muted);
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid var(--border);
+            white-space: nowrap;
+            background: #111;
+            user-select: none;
+        }
+        #target {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 13px 16px;
+            font-family: var(--mono);
+            font-size: 0.95rem;
+            color: var(--accent);
+            min-width: 0;
+        }
+        #target::placeholder { color: #333; }
+
+        /* ── sections ── */
+        .content {
+            padding: 0 28px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-header h2 {
+            font-family: var(--sans);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text);
+        }
+        .section-count {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--muted);
+        }
+
+        /* ── button grid ── */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 6px;
+        }
+        .futuristic-button {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: #bbb;
+            font-family: var(--sans);
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 9px 14px 9px 11px;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .futuristic-button::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: var(--border-hi);
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .futuristic-button:hover {
+            background: #1c1c1c;
+            border-color: var(--border-hi);
+            color: #fff;
+        }
+        .futuristic-button:hover::before {
+            background: var(--accent);
+        }
+        .futuristic-button:active {
+            background: #222;
+        }
+
+        /* ── footer ── */
+        footer {
+            margin-top: 60px;
+            padding: 20px 28px;
+            border-top: 1px solid var(--border);
+            font-family: var(--mono);
+            font-size: 0.62rem;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* ── responsive ── */
+        @media (max-width: 640px) {
+            .topbar { padding: 12px 16px; }
+            .hero { padding: 32px 16px 24px; }
+            .input-zone { padding: 0 16px 28px; }
+            .content { padding: 0 16px; }
+            .btn-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
+            .futuristic-button { font-size: 0.74rem; padding: 8px 10px; }
+            footer { padding: 16px; }
+        }
+        @media (max-width: 380px) {
+            .btn-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+
+    <script>
+        function googleSearch(type) {
+            var targetDomain = document.getElementById('target').value.trim();
+            if (!targetDomain) { alert('Please enter a target domain.'); return; }
+            var searchQuery = 'site:' + targetDomain;
+            switch (type) {
+                case 1:  searchQuery += ' intitle:index.of'; break;
+                case 2:  searchQuery += ' ext:xml | ext:conf | ext:cnf | ext:reg | ext:inf | ext:rdp | ext:cfg | ext:txt | ext:ora | ext:ini'; break;
+                case 3:  searchQuery += ' ext:sql | ext:dbf | ext:mdb'; break;
+                case 4:  searchQuery += ' ext:log'; break;
+                case 5:  searchQuery += ' ext:bkf | ext:bkp | ext:bak | ext:old | ext:backup'; break;
+                case 6:  searchQuery += ' inurl:login'; break;
+                case 7:  searchQuery += ' intext:"sql syntax near" | intext:"syntax error has occurred" | intext:"incorrect syntax near" | intext:"unexpected end of SQL command" | intext:"Warning: mysql_connect()" | intext:"Warning: mysql_query()" | intext:"Warning: pg_connect()"'; break;
+                case 8:  searchQuery += ' ext:doc | ext:docx | ext:odt | ext:pdf | ext:rtf | ext:sxw | ext:psw | ext:ppt | ext:pptx | ext:pps | ext:csv'; break;
+                case 9:  searchQuery += ' ext:php intitle:phpinfo "published by the PHP Group"'; break;
+                case 10: searchQuery += ' inurl:wp- | inurl:wp-content | inurl:plugins | inurl:uploads | inurl:themes | inurl:download'; break;
+                case 11: searchQuery += ' inurl:shell | inurl:backdoor | inurl:wso | inurl:cmd | shadow | passwd | boot.ini | inurl:backdoor'; break;
+                case 12: searchQuery += ' inurl:readme | inurl:license | inurl:install | inurl:setup | inurl:config'; break;
+                case 13: searchQuery += ' inurl:redir | inurl:url | inurl:redirect | inurl:return | inurl:src=http | inurl:r=http'; break;
+                case 14: searchQuery += ' ext:action | ext:struts | ext:do'; break;
+                case 15: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:pastebin.com ' + targetDomain), '_blank'); return;
+                case 16: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:linkedin.com employees ' + targetDomain), '_blank'); return;
+                case 17: window.open('https://www.google.com/search?q=' + encodeURIComponent('inurl:"/phpinfo.php" | inurl:".htaccess" | inurl:"/.git" ' + targetDomain + ' -github'), '_blank'); return;
+                case 18: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:*.' + targetDomain), '_blank'); return;
+                case 19: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:*.*.' + targetDomain), '_blank'); return;
+                case 20: window.open('https://www.google.com/search?q=' + encodeURIComponent('inurl:wp-content | inurl:wp-includes ' + targetDomain), '_blank'); return;
+                case 21: window.open('https://github.com/search?q=' + encodeURIComponent('"*.' + targetDomain + '"') + '&type=host', '_blank'); return;
+                case 22: window.open('http://' + targetDomain + '/crossdomain.xml', '_blank'); return;
+                case 23: window.open('http://threatcrowd.org/domain.php?domain=' + targetDomain, '_blank'); return;
+                case 24: window.open('https://www.google.com/search?q=' + encodeURIComponent('+inurl:' + targetDomain + ' +ext:swf'), '_blank'); return;
+                case 25: window.open('https://yandex.com/search/?text=' + encodeURIComponent('site:' + targetDomain + ' mime:swf'), '_blank'); return;
+                case 26: window.open('https://web.archive.org/cdx/search?url=' + encodeURIComponent(targetDomain) + '/&matchType=domain&collapse=urlkey&output=text&fl=original&filter=urlkey:.*swf&limit=100000&_=1507209148310', '_blank'); return;
+                case 27: window.open('https://web.archive.org/cdx/search?url=' + encodeURIComponent(targetDomain) + '/&matchType=domain&collapse=urlkey&output=text&fl=original&filter=mimetype:application/x-shockwave-flash&limit=100000&_=1507209148310', '_blank'); return;
+                case 28: window.open('https://web.archive.org/web/*/(.' + encodeURIComponent('.' + targetDomain) + ')', '_blank'); return;
+                case 29: window.open('https://web.archive.org/web/*/' + encodeURIComponent(targetDomain) + '/*', '_blank'); return;
+                case 30: window.open('https://crt.sh/?q=%25.' + targetDomain, '_blank'); return;
+                case 31: window.open('https://www.openbugbounty.org/search/?search=' + encodeURIComponent(targetDomain) + '&type=host', '_blank'); return;
+                case 32: window.open('https://www.reddit.com/search/?q=' + encodeURIComponent(targetDomain) + '&source=recent', '_blank'); return;
+                case 33: window.open('https://wwwb-dedup.us.archive.org:8083/cdx/search?url=' + encodeURIComponent(targetDomain) + '/&matchType=domain&collapse=digest&output=text&fl=original,timestamp&filter=urlkey:.*wp[-].*&limit=1000000&xx=', '_blank'); return;
+                case 34: window.open('https://censys.io/ipv4?q=' + targetDomain, '_blank'); return;
+                case 35: window.open('https://censys.io/domain?q=' + targetDomain, '_blank'); return;
+                case 36: window.open('https://censys.io/certificates?q=' + targetDomain, '_blank'); return;
+                case 37: window.open('https://www.shodan.io/search?query=' + targetDomain, '_blank'); return;
+                case 38: searchQuery += ' inurl:"/geoserver/ows?service=wfs"'; break;
+                case 39: searchQuery += ' intext:"ArcGIS REST Services Directory" intitle:"Folder: /"'; break;
+                case 40: searchQuery += ' inurl:/wp-content/uploads/wpo_wcpdf'; break;
+                case 41: searchQuery += ' intitle:"index of "main.yml"'; break;
+                case 42: searchQuery += ' inurl:/admin.aspx'; break;
+                case 43: searchQuery += ' inurl:/wp-content/uploads/wpo_wcpdf'; break;
+                case 44: searchQuery += ' inurl:uploadimage.php'; break;
+                case 45: searchQuery += ' inurl:*/wp-content/plugins/contact-form-7/'; break;
+                case 46: searchQuery += ' intitle:index.of conf.php'; break;
+                case 47: searchQuery += ' intitle:"Sharing API Info"'; break;
+                case 48: searchQuery += ' intitle:"Index of" inurl:/backup/ "admin.zip"'; break;
+                case 49: searchQuery += ' intitle:"index of" github-api'; break;
+                case 50: searchQuery += ' inurl:wp-content/uploads/wcpa_uploads'; break;
+                case 51: searchQuery += ' inurl:user intitle:"Drupal" intext:"Log in" -"powered by"'; break;
+                case 52: searchQuery += ' inurl: /libraries/joomla/database/'; break;
+                case 53: searchQuery += ' inurl:"php?sql=select" ext:php'; break;
+                case 54: searchQuery += ' inurl:"wp-content" intitle:"index.of" intext:wp-config.php'; break;
+                case 55: searchQuery += ' intext:"index of" inurl:json-rpc'; break;
+                case 56: searchQuery += ' intitle:"index of" "download.php?file="'; break;
+                case 57: searchQuery += ' intext:"index of" inurl:jwks-rsa'; break;
+                case 58: searchQuery += ' inurl:"wp-content" intitle:"index.of" intext:backup"'; break;
+                case 59: searchQuery += ' intitle:index.of conf.mysql'; break;
+                case 60: searchQuery += ' intitle:"index of" "users.yml" | "admin.yml" | "config.yml"'; break;
+                case 61: searchQuery += ' intitle:"index of" "docker-compose.yml"'; break;
+                case 62: searchQuery += ' intext:pom.xml intitle:"index of /"'; break;
+                case 63: searchQuery += ' intext:"Index of" intext:"/etc"'; break;
+                case 64: searchQuery += ' "sql" "parent" intitle:index.of -injection'; break;
+                case 65: searchQuery += ' inurl:".env" | inurl:"/.env" "DB_PASSWORD" | "APP_KEY" | "SECRET_KEY"'; break;
+                case 66: searchQuery += ' inurl:"/swagger-ui.html" | inurl:"/swagger-ui/" | intitle:"Swagger UI"'; break;
+                case 67: searchQuery += ' inurl:"/graphql" | inurl:"/graphiql" | inurl:"/playground"'; break;
+                case 68: searchQuery += ' inurl:"phpmyadmin/index.php" | inurl:"/phpmyadmin/" intitle:"phpMyAdmin"'; break;
+                case 69: searchQuery += ' inurl:staging | inurl:dev. | inurl:.dev | inurl:test. | inurl:preprod | inurl:uat.'; break;
+                case 70: searchQuery += ' inurl:"/.git" | intitle:"Index of /.git" "HEAD"'; break;
+                case 71: searchQuery += ' inurl:"/api/v1" | inurl:"/api/v2" | inurl:"/api/v3" intitle:"index of"'; break;
+                case 72: searchQuery += ' intitle:"Kibana" intext:"Welcome to Elastic" | inurl:":5601"'; break;
+                case 73: searchQuery += ' inurl:"s3.amazonaws.com" | intitle:"Bucket Listing" "s3"'; break;
+                case 74: searchQuery += ' intext:"DB_PASSWORD=" | intext:"DB_HOST=" filetype:env'; break;
+                case 75: searchQuery += ' inurl:"/wp-json/wp/v2/users" | inurl:"/wp-json/"'; break;
+                default: alert('Invalid option.'); return;
+            }
+            window.open('https://www.google.com/search?q=' + encodeURIComponent(searchQuery), '_blank');
+        }
+    </script>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <div class="logo-block">
+            BugBounty Search Engine
+            <small>Google Dork Toolkit</small>
+        </div>
+        <span class="tag">v1.0</span>
+        <span class="tag warn">authorized use only</span>
+    </div>
+    <span class="tag">75 dorks</span>
+</div>
+
+<div class="hero">
+    <h1>Search Engine For<br><em>Bug Bounty Hunters</em></h1>
+    <p>Automates Google dork queries for recon, vuln discovery, and OSINT. Enter a target domain below and click any technique.</p>
+</div>
+
+<div class="input-zone">
+    <label for="target">Enter Target Domain</label>
+    <div class="input-row">
+        <span class="input-pre">target://</span>
+        <input type="text" id="target" placeholder="example.com" autocomplete="off" spellcheck="false">
+    </div>
+</div>
+
+<div class="content">
+
+    <!-- Recon & Discovery -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Recon &amp; Discovery</h2>
+            <span class="section-count">13 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(18)">Find Subdomains</button>
+            <button class="futuristic-button" onclick="googleSearch(19)">Find Sub-Subdomains</button>
+            <button class="futuristic-button" onclick="googleSearch(30)">Certificate Transparency</button>
+            <button class="futuristic-button" onclick="googleSearch(23)">Check in ThreatCrowd</button>
+            <button class="futuristic-button" onclick="googleSearch(34)">Search in Censys (IPv4)</button>
+            <button class="futuristic-button" onclick="googleSearch(35)">Search in Censys (Domain)</button>
+            <button class="futuristic-button" onclick="googleSearch(36)">Search in Censys (Certificates)</button>
+            <button class="futuristic-button" onclick="googleSearch(37)">Search in SHODAN</button>
+            <button class="futuristic-button" onclick="googleSearch(16)">Employees on LINKEDIN</button>
+            <button class="futuristic-button" onclick="googleSearch(21)">Search in GITHUB</button>
+            <button class="futuristic-button" onclick="googleSearch(15)">Find Pastebin entries</button>
+            <button class="futuristic-button" onclick="googleSearch(32)">Search in Reddit</button>
+            <button class="futuristic-button" onclick="googleSearch(31)">Search OpenBugBounty</button>
+        </div>
+    </div>
+
+    <!-- Exposed Files & Directories -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Exposed Files &amp; Directories</h2>
+            <span class="section-count">18 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(1)">Directory listing vulnerabilities</button>
+            <button class="futuristic-button" onclick="googleSearch(2)">Exposed Configuration files</button>
+            <button class="futuristic-button" onclick="googleSearch(3)">Exposed Database files</button>
+            <button class="futuristic-button" onclick="googleSearch(4)">Exposed log files</button>
+            <button class="futuristic-button" onclick="googleSearch(5)">Backup and old files</button>
+            <button class="futuristic-button" onclick="googleSearch(8)">Publicly exposed documents</button>
+            <button class="futuristic-button" onclick="googleSearch(12)">Install / Setup files</button>
+            <button class="futuristic-button" onclick="googleSearch(17)">.htaccess sensitive files</button>
+            <button class="futuristic-button" onclick="googleSearch(46)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(48)">Sensitive Admin Backup</button>
+            <button class="futuristic-button" onclick="googleSearch(56)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(57)">jwks-rsa file</button>
+            <button class="futuristic-button" onclick="googleSearch(59)">Mysql file</button>
+            <button class="futuristic-button" onclick="googleSearch(60)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(61)">Docker-Compose yml file</button>
+            <button class="futuristic-button" onclick="googleSearch(62)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(63)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(64)">Directories containing SQL Installs and/or SQL databases</button>
+        </div>
+    </div>
+
+    <!-- Vulnerabilities -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Vulnerabilities</h2>
+            <span class="section-count">11 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(7)">SQL errors</button>
+            <button class="futuristic-button" onclick="googleSearch(9)">phpinfo()</button>
+            <button class="futuristic-button" onclick="googleSearch(11)">Finding Backdoors</button>
+            <button class="futuristic-button" onclick="googleSearch(13)">Open Redirects</button>
+            <button class="futuristic-button" onclick="googleSearch(14)">Apache STRUTS RCE</button>
+            <button class="futuristic-button" onclick="googleSearch(22)">Test CrossDomain</button>
+            <button class="futuristic-button" onclick="googleSearch(38)">Vulnerable Servers</button>
+            <button class="futuristic-button" onclick="googleSearch(39)">ArcGIS REST Services Directory</button>
+            <button class="futuristic-button" onclick="googleSearch(44)">File Upload</button>
+            <button class="futuristic-button" onclick="googleSearch(53)">Sql File</button>
+            <button class="futuristic-button" onclick="googleSearch(55)">Remote procedure call protocol</button>
+        </div>
+    </div>
+
+    <!-- Login & Admin -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Login &amp; Admin Portals</h2>
+            <span class="section-count">4 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(6)">Login pages</button>
+            <button class="futuristic-button" onclick="googleSearch(42)">Admin Portal</button>
+            <button class="futuristic-button" onclick="googleSearch(51)">Drupal Login</button>
+            <button class="futuristic-button" onclick="googleSearch(52)">Joomla Database/</button>
+        </div>
+    </div>
+
+    <!-- WordPress -->
+    <div class="section">
+        <div class="section-header">
+            <h2>WordPress</h2>
+            <span class="section-count">9 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(10)">Find WordPress</button>
+            <button class="futuristic-button" onclick="googleSearch(20)">Find WordPress #2</button>
+            <button class="futuristic-button" onclick="googleSearch(40)">wp-content Juicy Info</button>
+            <button class="futuristic-button" onclick="googleSearch(43)">Wordpress Juicy file 1</button>
+            <button class="futuristic-button" onclick="googleSearch(45)">Vulnerable Wordpress Plugin</button>
+            <button class="futuristic-button" onclick="googleSearch(50)">Wordpress Juicy file 2</button>
+            <button class="futuristic-button" onclick="googleSearch(54)">Wordpress Juicy file 3</button>
+            <button class="futuristic-button" onclick="googleSearch(58)">Wordpress Backup</button>
+            <button class="futuristic-button" onclick="googleSearch(33)">Search WP Config Backup</button>
+        </div>
+    </div>
+
+    <!-- Web Archive & SWF -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Web Archive &amp; SWF</h2>
+            <span class="section-count">6 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(24)">Find SWF</button>
+            <button class="futuristic-button" onclick="googleSearch(25)">Find MIME-SWF</button>
+            <button class="futuristic-button" onclick="googleSearch(26)">Find SWF links in the past</button>
+            <button class="futuristic-button" onclick="googleSearch(27)">Find MIME-SWF links in the past</button>
+            <button class="futuristic-button" onclick="googleSearch(28)">Search in Web Archive #1</button>
+            <button class="futuristic-button" onclick="googleSearch(29)">Search in Web Archive #2</button>
+        </div>
+    </div>
+
+    <!-- APIs & Keys -->
+    <div class="section">
+        <div class="section-header">
+            <h2>APIs &amp; Config Keys</h2>
+            <span class="section-count">3 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(47)">Sharing API Info</button>
+            <button class="futuristic-button" onclick="googleSearch(49)">Github API</button>
+            <button class="futuristic-button" onclick="googleSearch(41)">main.yml file</button>
+        </div>
+    </div>
+
+    <!-- Credentials & Modern Recon -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Credentials &amp; Modern Recon</h2>
+            <span class="section-count">11 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(65)">Exposed .env File (DB/API Keys)</button>
+            <button class="futuristic-button" onclick="googleSearch(74)">DB credentials in .env</button>
+            <button class="futuristic-button" onclick="googleSearch(70)">Exposed .git Directory</button>
+            <button class="futuristic-button" onclick="googleSearch(66)">Swagger / OpenAPI Docs</button>
+            <button class="futuristic-button" onclick="googleSearch(67)">GraphQL Endpoint</button>
+            <button class="futuristic-button" onclick="googleSearch(71)">API v1/v2/v3 Index</button>
+            <button class="futuristic-button" onclick="googleSearch(68)">phpMyAdmin Panel</button>
+            <button class="futuristic-button" onclick="googleSearch(72)">Kibana / Elasticsearch</button>
+            <button class="futuristic-button" onclick="googleSearch(73)">Exposed S3 Bucket</button>
+            <button class="futuristic-button" onclick="googleSearch(69)">Staging / Dev / Test Environments</button>
+            <button class="futuristic-button" onclick="googleSearch(75)">WordPress REST API Users</button>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <span>Search Engine For Bug Bounty Hunters</span>
+    <span>for authorized security research use only</span>
+</footer>
+
+</body>
+</html>
