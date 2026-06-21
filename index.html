@@ -15,6 +15,7 @@
             --border-hi: #444;
             --accent:    #c8ff00;
             --accent2:   #ff6b35;
+            --accent3:   #4d9eff;
             --text:      #e2e2e2;
             --muted:     #666;
             --mono:      'IBM Plex Mono', monospace;
@@ -40,6 +41,11 @@
             justify-content: space-between;
             gap: 12px;
             flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            background: rgba(13,13,13,0.92);
+            backdrop-filter: blur(6px);
+            z-index: 10;
         }
         .topbar-left {
             display: flex;
@@ -98,13 +104,13 @@
             margin-top: 12px;
             color: var(--muted);
             font-size: 0.9rem;
-            max-width: 540px;
+            max-width: 560px;
             line-height: 1.6;
         }
 
         /* ── input zone ── */
         .input-zone {
-            padding: 0 28px 40px;
+            padding: 0 28px 28px;
         }
         .input-zone label {
             display: block;
@@ -151,12 +157,37 @@
         }
         #target::placeholder { color: #333; }
 
+        /* ── nav chips (jump to section) ── */
+        .nav-chips {
+            padding: 0 28px 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-width: 1000px;
+        }
+        .nav-chip {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 5px 10px;
+            border-radius: 20px;
+            text-decoration: none;
+            letter-spacing: 0.04em;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .nav-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         /* ── sections ── */
         .content {
             padding: 0 28px;
         }
         .section {
             margin-bottom: 40px;
+            scroll-margin-top: 70px;
         }
         .section-header {
             display: flex;
@@ -179,6 +210,18 @@
             font-size: 0.6rem;
             color: var(--muted);
         }
+        .section-sub {
+            font-family: var(--mono);
+            font-size: 0.62rem;
+            color: var(--muted);
+            margin-left: auto;
+            border: 1px solid var(--border);
+            padding: 2px 7px;
+            border-radius: 2px;
+        }
+        .section-sub.gh { color: #8b8bff; border-color: rgba(139,139,255,0.35); }
+        .section-sub.shodan { color: var(--accent3); border-color: rgba(77,158,255,0.35); }
+        .section-sub.fofa { color: #ff8fd0; border-color: rgba(255,143,208,0.35); }
 
         /* ── button grid ── */
         .btn-grid {
@@ -227,6 +270,58 @@
         .futuristic-button:active {
             background: #222;
         }
+        .futuristic-button.gh:hover::before { background: #8b8bff; }
+        .futuristic-button.shodan:hover::before { background: var(--accent3); }
+        .futuristic-button.fofa:hover::before { background: #ff8fd0; }
+
+        /* ── custom query box ── */
+        .custom-box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .custom-box input {
+            flex: 1;
+            min-width: 200px;
+            background: #0f0f0f;
+            border: 1px solid var(--border-hi);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            padding: 9px 12px;
+            border-radius: 3px;
+            outline: none;
+        }
+        .custom-box input:focus { border-color: var(--accent); }
+        .custom-box select {
+            background: #0f0f0f;
+            border: 1px solid var(--border-hi);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            padding: 9px 10px;
+            border-radius: 3px;
+            outline: none;
+        }
+        .custom-box button {
+            background: var(--accent);
+            color: #111;
+            border: none;
+            font-family: var(--sans);
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 10px 18px;
+            border-radius: 3px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .custom-box button:hover { background: #d6ff33; }
 
         /* ── footer ── */
         footer {
@@ -246,7 +341,8 @@
         @media (max-width: 640px) {
             .topbar { padding: 12px 16px; }
             .hero { padding: 32px 16px 24px; }
-            .input-zone { padding: 0 16px 28px; }
+            .input-zone { padding: 0 16px 20px; }
+            .nav-chips { padding: 0 16px 28px; }
             .content { padding: 0 16px; }
             .btn-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
             .futuristic-button { font-size: 0.74rem; padding: 8px 10px; }
@@ -258,9 +354,31 @@
     </style>
 
     <script>
-        function googleSearch(type) {
+        function getTarget() {
             var targetDomain = document.getElementById('target').value.trim();
-            if (!targetDomain) { alert('Please enter a target domain.'); return; }
+            if (!targetDomain) { alert('Please enter a target domain.'); return null; }
+            return targetDomain;
+        }
+
+        function openSearch(engine, query) {
+            var url;
+            switch (engine) {
+                case 'google': url = 'https://www.google.com/search?q=' + encodeURIComponent(query); break;
+                case 'bing':    url = 'https://www.bing.com/search?q=' + encodeURIComponent(query); break;
+                case 'duck':    url = 'https://duckduckgo.com/?q=' + encodeURIComponent(query); break;
+                case 'yandex':  url = 'https://yandex.com/search/?text=' + encodeURIComponent(query); break;
+                case 'github':  url = 'https://github.com/search?q=' + encodeURIComponent(query) + '&type=code'; break;
+                case 'shodan':  url = 'https://www.shodan.io/search?query=' + encodeURIComponent(query); break;
+                case 'fofa':    url = 'https://en.fofa.info/result?qbase64=' + btoa(query); break;
+                case 'censys':  url = 'https://search.censys.io/search?resource=hosts&q=' + encodeURIComponent(query); break;
+                default: return;
+            }
+            window.open(url, '_blank');
+        }
+
+        function googleSearch(type) {
+            var targetDomain = getTarget();
+            if (!targetDomain) return;
             var searchQuery = 'site:' + targetDomain;
             switch (type) {
                 case 1:  searchQuery += ' intitle:index.of'; break;
@@ -277,17 +395,17 @@
                 case 12: searchQuery += ' inurl:readme | inurl:license | inurl:install | inurl:setup | inurl:config'; break;
                 case 13: searchQuery += ' inurl:redir | inurl:url | inurl:redirect | inurl:return | inurl:src=http | inurl:r=http'; break;
                 case 14: searchQuery += ' ext:action | ext:struts | ext:do'; break;
-                case 15: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:pastebin.com ' + targetDomain), '_blank'); return;
-                case 16: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:linkedin.com employees ' + targetDomain), '_blank'); return;
-                case 17: window.open('https://www.google.com/search?q=' + encodeURIComponent('inurl:"/phpinfo.php" | inurl:".htaccess" | inurl:"/.git" ' + targetDomain + ' -github'), '_blank'); return;
-                case 18: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:*.' + targetDomain), '_blank'); return;
-                case 19: window.open('https://www.google.com/search?q=' + encodeURIComponent('site:*.*.' + targetDomain), '_blank'); return;
-                case 20: window.open('https://www.google.com/search?q=' + encodeURIComponent('inurl:wp-content | inurl:wp-includes ' + targetDomain), '_blank'); return;
-                case 21: window.open('https://github.com/search?q=' + encodeURIComponent('"*.' + targetDomain + '"') + '&type=host', '_blank'); return;
+                case 15: openSearch('google', 'site:pastebin.com ' + targetDomain); return;
+                case 16: openSearch('google', 'site:linkedin.com employees ' + targetDomain); return;
+                case 17: openSearch('google', 'inurl:"/phpinfo.php" | inurl:".htaccess" | inurl:"/.git" ' + targetDomain + ' -github'); return;
+                case 18: openSearch('google', 'site:*.' + targetDomain); return;
+                case 19: openSearch('google', 'site:*.*.' + targetDomain); return;
+                case 20: openSearch('google', 'inurl:wp-content | inurl:wp-includes ' + targetDomain); return;
+                case 21: openSearch('github', '"*.' + targetDomain + '"'); return;
                 case 22: window.open('http://' + targetDomain + '/crossdomain.xml', '_blank'); return;
                 case 23: window.open('http://threatcrowd.org/domain.php?domain=' + targetDomain, '_blank'); return;
-                case 24: window.open('https://www.google.com/search?q=' + encodeURIComponent('+inurl:' + targetDomain + ' +ext:swf'), '_blank'); return;
-                case 25: window.open('https://yandex.com/search/?text=' + encodeURIComponent('site:' + targetDomain + ' mime:swf'), '_blank'); return;
+                case 24: openSearch('google', '+inurl:' + targetDomain + ' +ext:swf'); return;
+                case 25: openSearch('yandex', 'site:' + targetDomain + ' mime:swf'); return;
                 case 26: window.open('https://web.archive.org/cdx/search?url=' + encodeURIComponent(targetDomain) + '/&matchType=domain&collapse=urlkey&output=text&fl=original&filter=urlkey:.*swf&limit=100000&_=1507209148310', '_blank'); return;
                 case 27: window.open('https://web.archive.org/cdx/search?url=' + encodeURIComponent(targetDomain) + '/&matchType=domain&collapse=urlkey&output=text&fl=original&filter=mimetype:application/x-shockwave-flash&limit=100000&_=1507209148310', '_blank'); return;
                 case 28: window.open('https://web.archive.org/web/*/(.' + encodeURIComponent('.' + targetDomain) + ')', '_blank'); return;
@@ -296,10 +414,10 @@
                 case 31: window.open('https://www.openbugbounty.org/search/?search=' + encodeURIComponent(targetDomain) + '&type=host', '_blank'); return;
                 case 32: window.open('https://www.reddit.com/search/?q=' + encodeURIComponent(targetDomain) + '&source=recent', '_blank'); return;
                 case 33: window.open('https://wwwb-dedup.us.archive.org:8083/cdx/search?url=' + encodeURIComponent(targetDomain) + '/&matchType=domain&collapse=digest&output=text&fl=original,timestamp&filter=urlkey:.*wp[-].*&limit=1000000&xx=', '_blank'); return;
-                case 34: window.open('https://censys.io/ipv4?q=' + targetDomain, '_blank'); return;
-                case 35: window.open('https://censys.io/domain?q=' + targetDomain, '_blank'); return;
-                case 36: window.open('https://censys.io/certificates?q=' + targetDomain, '_blank'); return;
-                case 37: window.open('https://www.shodan.io/search?query=' + targetDomain, '_blank'); return;
+                case 34: window.open('https://search.censys.io/search?resource=hosts&q=' + encodeURIComponent(targetDomain), '_blank'); return;
+                case 35: window.open('https://search.censys.io/search?resource=hosts&q=' + encodeURIComponent('dns.names: ' + targetDomain), '_blank'); return;
+                case 36: window.open('https://search.censys.io/certificates?q=' + encodeURIComponent(targetDomain), '_blank'); return;
+                case 37: openSearch('shodan', 'hostname:' + targetDomain); return;
                 case 38: searchQuery += ' inurl:"/geoserver/ows?service=wfs"'; break;
                 case 39: searchQuery += ' intext:"ArcGIS REST Services Directory" intitle:"Folder: /"'; break;
                 case 40: searchQuery += ' inurl:/wp-content/uploads/wpo_wcpdf'; break;
@@ -338,9 +456,141 @@
                 case 73: searchQuery += ' inurl:"s3.amazonaws.com" | intitle:"Bucket Listing" "s3"'; break;
                 case 74: searchQuery += ' intext:"DB_PASSWORD=" | intext:"DB_HOST=" filetype:env'; break;
                 case 75: searchQuery += ' inurl:"/wp-json/wp/v2/users" | inurl:"/wp-json/"'; break;
+                /* ── new Google dorks ── */
+                case 76: searchQuery += ' inurl:".idea" intitle:"index of"'; break;
+                case 77: searchQuery += ' inurl:".vscode" intitle:"index of"'; break;
+                case 78: searchQuery += ' filetype:env "AWS_ACCESS_KEY_ID" | "AWS_SECRET_ACCESS_KEY"'; break;
+                case 79: searchQuery += ' intitle:"index of" "id_rsa" | "id_rsa.pub" | "known_hosts" | "authorized_keys"'; break;
+                case 80: searchQuery += ' intext:"Index of" "credentials.json" | "client_secret.json"'; break;
+                case 81: searchQuery += ' inurl:"/actuator" intitle:"actuator" | intext:"\\"status\\":\\"UP\\""'; break;
+                case 82: searchQuery += ' inurl:"/actuator/env" | inurl:"/actuator/heapdump"'; break;
+                case 83: searchQuery += ' intitle:"Grafana" inurl:"/login" | intext:"Welcome to Grafana"'; break;
+                case 84: searchQuery += ' intitle:"Jenkins" intext:"Dashboard [Jenkins]"'; break;
+                case 85: searchQuery += ' intitle:"GitLab" inurl:"/users/sign_in"'; break;
+                case 86: searchQuery += ' intitle:"RabbitMQ Management" inurl:15672'; break;
+                case 87: searchQuery += ' intitle:"Index of" "npm-debug.log" | "yarn-error.log"'; break;
+                case 88: searchQuery += ' intitle:"index of" ".npmrc" | ".yarnrc"'; break;
+                case 89: searchQuery += ' inurl:"/.well-known/security.txt"'; break;
+                case 90: searchQuery += ' intext:"index of" "terraform.tfstate" | "terraform.tfvars"'; break;
+                case 91: searchQuery += ' inurl:"/server-status" intitle:"Apache Status"'; break;
+                case 92: searchQuery += ' intitle:"phpMyAdmin" intext:"Welcome to phpMyAdmin"'; break;
+                case 93: searchQuery += ' inurl:"/_profiler" intitle:"Symfony Profiler"'; break;
+                case 94: searchQuery += ' intitle:"Index of" "settings.py" "SECRET_KEY"'; break;
+                case 95: searchQuery += ' inurl:"/console" intext:"Werkzeug Debugger"'; break;
+                case 96: searchQuery += ' intext:"Index of" "firebase.json" | "google-services.json"'; break;
+                case 97: searchQuery += ' inurl:"/v2/_catalog" intext:"repositories"'; break;
+                case 98: searchQuery += ' intitle:"Apache Airflow" inurl:"/login"'; break;
+                case 99: searchQuery += ' inurl:"/metrics" intext:"# HELP" "# TYPE"'; break;
+                case 100: searchQuery += ' intitle:"Confluence" inurl:"/login.action"'; break;
+                case 101: searchQuery += ' intitle:"JIRA" inurl:"/secure/Dashboard.jspa"'; break;
+                case 102: searchQuery += ' intitle:"index of" "*.pem" | "*.key" | "*.ppk"'; break;
+                case 103: searchQuery += ' inurl:"/.aws/credentials" | intitle:"index of" ".aws"'; break;
+                case 104: searchQuery += ' intext:"index of" "composer.json" "require"'; break;
+                case 105: searchQuery += ' inurl:"/cgi-bin/" intitle:"index of"'; break;
                 default: alert('Invalid option.'); return;
             }
             window.open('https://www.google.com/search?q=' + encodeURIComponent(searchQuery), '_blank');
+        }
+
+        /* ── Shodan dorks ── */
+        function shodanSearch(type) {
+            var t = getTarget();
+            if (!t) return;
+            var q;
+            switch (type) {
+                case 1:  q = 'hostname:' + t; break;
+                case 2:  q = 'ssl:"' + t + '"'; break;
+                case 3:  q = 'hostname:' + t + ' http.title:"login"'; break;
+                case 4:  q = 'hostname:' + t + ' port:22'; break;
+                case 5:  q = 'hostname:' + t + ' port:3389'; break;
+                case 6:  q = 'hostname:' + t + ' port:21'; break;
+                case 7:  q = 'hostname:' + t + ' product:nginx'; break;
+                case 8:  q = 'hostname:' + t + ' product:Apache'; break;
+                case 9:  q = 'hostname:' + t + ' "X-Powered-By: PHP"'; break;
+                case 10: q = 'hostname:' + t + ' product:"MySQL"'; break;
+                case 11: q = 'hostname:' + t + ' product:"PostgreSQL"'; break;
+                case 12: q = 'hostname:' + t + ' product:"MongoDB"'; break;
+                case 13: q = 'hostname:' + t + ' product:"Redis"'; break;
+                case 14: q = 'hostname:' + t + ' product:"Elasticsearch"'; break;
+                case 15: q = 'hostname:' + t + ' "docker" port:2375,2376'; break;
+                case 16: q = 'hostname:' + t + ' http.title:"Jenkins"'; break;
+                case 17: q = 'hostname:' + t + ' http.title:"Kibana"'; break;
+                case 18: q = 'hostname:' + t + ' http.title:"Grafana"'; break;
+                case 19: q = 'hostname:' + t + ' http.component:"jquery"'; break;
+                case 20: q = 'ssl.cert.subject.cn:"' + t + '"'; break;
+                case 21: q = 'hostname:' + t + ' has_vuln:true'; break;
+                case 22: q = 'hostname:' + t + ' port:8080,8443'; break;
+                case 23: q = 'hostname:' + t + ' "VNC"'; break;
+                case 24: q = 'org:"' + t + '"'; break;
+                default: return;
+            }
+            openSearch('shodan', q);
+        }
+
+        /* ── GitHub dorks ── */
+        function githubSearch(type) {
+            var t = getTarget();
+            if (!t) return;
+            var q;
+            switch (type) {
+                case 1:  q = '"' + t + '" password'; break;
+                case 2:  q = '"' + t + '" api_key'; break;
+                case 3:  q = '"' + t + '" secret'; break;
+                case 4:  q = '"' + t + '" token'; break;
+                case 5:  q = '"' + t + '" .env'; break;
+                case 6:  q = '"' + t + '" "BEGIN RSA PRIVATE KEY"'; break;
+                case 7:  q = '"' + t + '" "BEGIN OPENSSH PRIVATE KEY"'; break;
+                case 8:  q = '"' + t + '" filename:.npmrc _auth'; break;
+                case 9:  q = '"' + t + '" filename:.git-credentials'; break;
+                case 10: q = '"' + t + '" filename:wp-config.php'; break;
+                case 11: q = '"' + t + '" filename:settings.py SECRET_KEY'; break;
+                case 12: q = '"' + t + '" filename:credentials'; break;
+                case 13: q = '"' + t + '" extension:sql mysql dump'; break;
+                case 14: q = '"' + t + '" extension:json AKIA'; break;
+                case 15: q = '"' + t + '" filename:docker-compose.yml'; break;
+                case 16: q = '"' + t + '" filename:config.json db_password'; break;
+                case 17: q = '"' + t + '" smtp_password'; break;
+                case 18: q = '"' + t + '" filename:.bash_history'; break;
+                case 19: q = '"*.' + t + '"'; break;
+                case 20: q = 'org:' + t.split('.')[0]; break;
+                default: return;
+            }
+            openSearch('github', q);
+        }
+
+        /* ── FOFA dorks (domain/host network search) ── */
+        function fofaSearch(type) {
+            var t = getTarget();
+            if (!t) return;
+            var q;
+            switch (type) {
+                case 1: q = 'domain="' + t + '"'; break;
+                case 2: q = 'host="' + t + '"'; break;
+                case 3: q = 'cert="' + t + '"'; break;
+                case 4: q = 'domain="' + t + '" && title="login"'; break;
+                case 5: q = 'domain="' + t + '" && port="3389"'; break;
+                case 6: q = 'domain="' + t + '" && app="JBoss"'; break;
+                default: return;
+            }
+            openSearch('fofa', q);
+        }
+
+        /* ── custom dork builder ── */
+        function customSearch() {
+            var t = getTarget();
+            if (!t) return;
+            var op = document.getElementById('custom-op').value;
+            var val = document.getElementById('custom-val').value.trim();
+            var engine = document.getElementById('custom-engine').value;
+            var q;
+            if (engine === 'shodan') {
+                q = (op === 'none' ? 'hostname:' + t : op + ':' + t + (val ? ' ' + val : ''));
+            } else if (engine === 'github') {
+                q = '"' + t + '"' + (val ? ' ' + val : '');
+            } else {
+                q = (op === 'none' ? t : op + ':' + t) + (val ? ' ' + val : '');
+            }
+            openSearch(engine, q);
         }
     </script>
 </head>
@@ -351,7 +601,7 @@
         <div class="logo-block">
             BugBounty Search Engine
         </div>
-        <span class="tag">v1.0</span>
+        <span class="tag">v2.0</span>
         <span class="tag warn">authorized use only</span>
     </div>
     <span class="tag">MILANG</span>
@@ -359,7 +609,7 @@
 
 <div class="hero">
     <h1>Search Engine For<br><em>Bug Bounty Hunters</em></h1>
-    <p>Automates Google dork queries for recon, vuln discovery, and OSINT. Enter a target domain below and click any technique.</p>
+    <p>Automates Google, Shodan, GitHub, FOFA and Censys dork queries for recon, OSINT, and exposure discovery. Enter a target domain below, then click any technique. Only use against targets you are authorized to test.</p>
 </div>
 
 <div class="input-zone">
@@ -370,10 +620,26 @@
     </div>
 </div>
 
+<div class="nav-chips">
+    <a class="nav-chip" href="#recon">Recon</a>
+    <a class="nav-chip" href="#files">Exposed Files</a>
+    <a class="nav-chip" href="#vulns">Vulnerabilities</a>
+    <a class="nav-chip" href="#devops">DevOps &amp; Infra Panels</a>
+    <a class="nav-chip" href="#login">Login &amp; Admin</a>
+    <a class="nav-chip" href="#wordpress">WordPress</a>
+    <a class="nav-chip" href="#archive">Web Archive &amp; SWF</a>
+    <a class="nav-chip" href="#apikeys">APIs &amp; Keys</a>
+    <a class="nav-chip" href="#creds">Credentials &amp; Modern Recon</a>
+    <a class="nav-chip" href="#shodan">Shodan Dorks</a>
+    <a class="nav-chip" href="#github">GitHub Dorks</a>
+    <a class="nav-chip" href="#fofa">FOFA / Censys</a>
+    <a class="nav-chip" href="#custom">Custom Builder</a>
+</div>
+
 <div class="content">
 
     <!-- Recon & Discovery -->
-    <div class="section">
+    <div class="section" id="recon">
         <div class="section-header">
             <h2>Recon &amp; Discovery</h2>
             <span class="section-count">13 dorks</span>
@@ -383,8 +649,8 @@
             <button class="futuristic-button" onclick="googleSearch(19)">Find Sub-Subdomains</button>
             <button class="futuristic-button" onclick="googleSearch(30)">Certificate Transparency</button>
             <button class="futuristic-button" onclick="googleSearch(23)">Check in ThreatCrowd</button>
-            <button class="futuristic-button" onclick="googleSearch(34)">Search in Censys (IPv4)</button>
-            <button class="futuristic-button" onclick="googleSearch(35)">Search in Censys (Domain)</button>
+            <button class="futuristic-button" onclick="googleSearch(34)">Search in Censys (Hosts)</button>
+            <button class="futuristic-button" onclick="googleSearch(35)">Search in Censys (DNS Names)</button>
             <button class="futuristic-button" onclick="googleSearch(36)">Search in Censys (Certificates)</button>
             <button class="futuristic-button" onclick="googleSearch(37)">Search in SHODAN</button>
             <button class="futuristic-button" onclick="googleSearch(16)">Employees on LINKEDIN</button>
@@ -396,10 +662,10 @@
     </div>
 
     <!-- Exposed Files & Directories -->
-    <div class="section">
+    <div class="section" id="files">
         <div class="section-header">
             <h2>Exposed Files &amp; Directories</h2>
-            <span class="section-count">18 dorks</span>
+            <span class="section-count">26 dorks</span>
         </div>
         <div class="btn-grid">
             <button class="futuristic-button" onclick="googleSearch(1)">Directory listing vulnerabilities</button>
@@ -410,24 +676,32 @@
             <button class="futuristic-button" onclick="googleSearch(8)">Publicly exposed documents</button>
             <button class="futuristic-button" onclick="googleSearch(12)">Install / Setup files</button>
             <button class="futuristic-button" onclick="googleSearch(17)">.htaccess sensitive files</button>
-            <button class="futuristic-button" onclick="googleSearch(46)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(46)">Sensitive File (conf.php)</button>
             <button class="futuristic-button" onclick="googleSearch(48)">Sensitive Admin Backup</button>
-            <button class="futuristic-button" onclick="googleSearch(56)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(56)">download.php File Param</button>
             <button class="futuristic-button" onclick="googleSearch(57)">jwks-rsa file</button>
-            <button class="futuristic-button" onclick="googleSearch(59)">Mysql file</button>
-            <button class="futuristic-button" onclick="googleSearch(60)">Sensitive File</button>
+            <button class="futuristic-button" onclick="googleSearch(59)">Mysql conf file</button>
+            <button class="futuristic-button" onclick="googleSearch(60)">users/admin/config.yml</button>
             <button class="futuristic-button" onclick="googleSearch(61)">Docker-Compose yml file</button>
-            <button class="futuristic-button" onclick="googleSearch(62)">Sensitive File</button>
-            <button class="futuristic-button" onclick="googleSearch(63)">Sensitive File</button>
-            <button class="futuristic-button" onclick="googleSearch(64)">Directories containing SQL Installs and/or SQL databases</button>
+            <button class="futuristic-button" onclick="googleSearch(62)">pom.xml exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(63)">/etc directory exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(64)">SQL Installs / Databases dir</button>
+            <button class="futuristic-button" onclick="googleSearch(76)">.idea directory exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(77)">.vscode directory exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(79)">SSH keys (id_rsa) exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(80)">OAuth credentials.json exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(87)">npm/yarn debug logs</button>
+            <button class="futuristic-button" onclick="googleSearch(88)">.npmrc / .yarnrc exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(102)">Private keys (.pem/.key/.ppk)</button>
+            <button class="futuristic-button" onclick="googleSearch(105)">cgi-bin directory listing</button>
         </div>
     </div>
 
     <!-- Vulnerabilities -->
-    <div class="section">
+    <div class="section" id="vulns">
         <div class="section-header">
             <h2>Vulnerabilities</h2>
-            <span class="section-count">11 dorks</span>
+            <span class="section-count">12 dorks</span>
         </div>
         <div class="btn-grid">
             <button class="futuristic-button" onclick="googleSearch(7)">SQL errors</button>
@@ -436,30 +710,60 @@
             <button class="futuristic-button" onclick="googleSearch(13)">Open Redirects</button>
             <button class="futuristic-button" onclick="googleSearch(14)">Apache STRUTS RCE</button>
             <button class="futuristic-button" onclick="googleSearch(22)">Test CrossDomain</button>
-            <button class="futuristic-button" onclick="googleSearch(38)">Vulnerable Servers</button>
+            <button class="futuristic-button" onclick="googleSearch(38)">Vulnerable Geoserver (WFS)</button>
             <button class="futuristic-button" onclick="googleSearch(39)">ArcGIS REST Services Directory</button>
-            <button class="futuristic-button" onclick="googleSearch(44)">File Upload</button>
-            <button class="futuristic-button" onclick="googleSearch(53)">Sql File</button>
-            <button class="futuristic-button" onclick="googleSearch(55)">Remote procedure call protocol</button>
+            <button class="futuristic-button" onclick="googleSearch(44)">File Upload endpoint</button>
+            <button class="futuristic-button" onclick="googleSearch(53)">SQL injection-prone param</button>
+            <button class="futuristic-button" onclick="googleSearch(55)">JSON-RPC exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(95)">Werkzeug/Flask Debug Console</button>
+        </div>
+    </div>
+
+    <!-- DevOps & Infra Panels -->
+    <div class="section" id="devops">
+        <div class="section-header">
+            <h2>DevOps &amp; Infra Panels</h2>
+            <span class="section-count">18 dorks</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button" onclick="googleSearch(81)">Spring Boot Actuator</button>
+            <button class="futuristic-button" onclick="googleSearch(82)">Actuator env/heapdump</button>
+            <button class="futuristic-button" onclick="googleSearch(83)">Grafana Login</button>
+            <button class="futuristic-button" onclick="googleSearch(84)">Jenkins Dashboard</button>
+            <button class="futuristic-button" onclick="googleSearch(85)">GitLab Sign-in</button>
+            <button class="futuristic-button" onclick="googleSearch(86)">RabbitMQ Management UI</button>
+            <button class="futuristic-button" onclick="googleSearch(72)">Kibana / Elasticsearch</button>
+            <button class="futuristic-button" onclick="googleSearch(91)">Apache server-status</button>
+            <button class="futuristic-button" onclick="googleSearch(93)">Symfony Profiler</button>
+            <button class="futuristic-button" onclick="googleSearch(98)">Apache Airflow Login</button>
+            <button class="futuristic-button" onclick="googleSearch(99)">Prometheus /metrics</button>
+            <button class="futuristic-button" onclick="googleSearch(100)">Confluence Login</button>
+            <button class="futuristic-button" onclick="googleSearch(101)">JIRA Dashboard</button>
+            <button class="futuristic-button" onclick="googleSearch(97)">Exposed Docker Registry Catalog</button>
+            <button class="futuristic-button" onclick="googleSearch(89)">security.txt disclosure policy</button>
+            <button class="futuristic-button" onclick="googleSearch(90)">Terraform state files</button>
+            <button class="futuristic-button" onclick="googleSearch(96)">Firebase / Google Services JSON</button>
+            <button class="futuristic-button" onclick="googleSearch(103)">AWS credentials file exposed</button>
         </div>
     </div>
 
     <!-- Login & Admin -->
-    <div class="section">
+    <div class="section" id="login">
         <div class="section-header">
             <h2>Login &amp; Admin Portals</h2>
-            <span class="section-count">4 dorks</span>
+            <span class="section-count">5 dorks</span>
         </div>
         <div class="btn-grid">
             <button class="futuristic-button" onclick="googleSearch(6)">Login pages</button>
             <button class="futuristic-button" onclick="googleSearch(42)">Admin Portal</button>
             <button class="futuristic-button" onclick="googleSearch(51)">Drupal Login</button>
             <button class="futuristic-button" onclick="googleSearch(52)">Joomla Database/</button>
+            <button class="futuristic-button" onclick="googleSearch(92)">phpMyAdmin Welcome page</button>
         </div>
     </div>
 
     <!-- WordPress -->
-    <div class="section">
+    <div class="section" id="wordpress">
         <div class="section-header">
             <h2>WordPress</h2>
             <span class="section-count">9 dorks</span>
@@ -478,7 +782,7 @@
     </div>
 
     <!-- Web Archive & SWF -->
-    <div class="section">
+    <div class="section" id="archive">
         <div class="section-header">
             <h2>Web Archive &amp; SWF</h2>
             <span class="section-count">6 dorks</span>
@@ -494,7 +798,7 @@
     </div>
 
     <!-- APIs & Keys -->
-    <div class="section">
+    <div class="section" id="apikeys">
         <div class="section-header">
             <h2>APIs &amp; Config Keys</h2>
             <span class="section-count">3 dorks</span>
@@ -507,23 +811,143 @@
     </div>
 
     <!-- Credentials & Modern Recon -->
-    <div class="section">
+    <div class="section" id="creds">
         <div class="section-header">
             <h2>Credentials &amp; Modern Recon</h2>
-            <span class="section-count">11 dorks</span>
+            <span class="section-count">15 dorks</span>
         </div>
         <div class="btn-grid">
             <button class="futuristic-button" onclick="googleSearch(65)">Exposed .env File (DB/API Keys)</button>
             <button class="futuristic-button" onclick="googleSearch(74)">DB credentials in .env</button>
+            <button class="futuristic-button" onclick="googleSearch(78)">AWS keys in .env</button>
             <button class="futuristic-button" onclick="googleSearch(70)">Exposed .git Directory</button>
             <button class="futuristic-button" onclick="googleSearch(66)">Swagger / OpenAPI Docs</button>
             <button class="futuristic-button" onclick="googleSearch(67)">GraphQL Endpoint</button>
             <button class="futuristic-button" onclick="googleSearch(71)">API v1/v2/v3 Index</button>
             <button class="futuristic-button" onclick="googleSearch(68)">phpMyAdmin Panel</button>
-            <button class="futuristic-button" onclick="googleSearch(72)">Kibana / Elasticsearch</button>
             <button class="futuristic-button" onclick="googleSearch(73)">Exposed S3 Bucket</button>
             <button class="futuristic-button" onclick="googleSearch(69)">Staging / Dev / Test Environments</button>
             <button class="futuristic-button" onclick="googleSearch(75)">WordPress REST API Users</button>
+            <button class="futuristic-button" onclick="googleSearch(94)">Django settings.py SECRET_KEY</button>
+            <button class="futuristic-button" onclick="googleSearch(104)">composer.json dependencies exposed</button>
+            <button class="futuristic-button" onclick="googleSearch(103)">.aws/credentials directory</button>
+            <button class="futuristic-button" onclick="googleSearch(80)">client_secret.json exposed</button>
+        </div>
+    </div>
+
+    <!-- Shodan Dorks -->
+    <div class="section" id="shodan">
+        <div class="section-header">
+            <h2>Shodan Dorks</h2>
+            <span class="section-count">24 queries</span>
+            <span class="section-sub shodan">opens shodan.io</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button shodan" onclick="shodanSearch(1)">Hosts for hostname</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(2)">Hosts by SSL cert match</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(20)">Hosts by cert subject CN</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(24)">Hosts by Org name</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(3)">Login pages on host</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(4)">Open SSH (22)</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(5)">Open RDP (3389)</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(6)">Open FTP (21)</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(22)">Alt HTTP ports 8080/8443</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(23)">Exposed VNC</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(7)">Running nginx</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(8)">Running Apache</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(9)">PHP-powered hosts</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(19)">jQuery component fingerprint</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(10)">Exposed MySQL</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(11)">Exposed PostgreSQL</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(12)">Exposed MongoDB</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(13)">Exposed Redis</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(14)">Exposed Elasticsearch</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(15)">Exposed Docker API (2375/2376)</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(16)">Jenkins instances</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(17)">Kibana instances</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(18)">Grafana instances</button>
+            <button class="futuristic-button shodan" onclick="shodanSearch(21)">Hosts with known vulns</button>
+        </div>
+    </div>
+
+    <!-- GitHub Dorks -->
+    <div class="section" id="github">
+        <div class="section-header">
+            <h2>GitHub Dorks</h2>
+            <span class="section-count">20 queries</span>
+            <span class="section-sub gh">opens github.com code search</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button gh" onclick="githubSearch(19)">Subdomain mentions (*.domain)</button>
+            <button class="futuristic-button gh" onclick="githubSearch(20)">Org repos (by name guess)</button>
+            <button class="futuristic-button gh" onclick="githubSearch(1)">"password" + domain</button>
+            <button class="futuristic-button gh" onclick="githubSearch(2)">"api_key" + domain</button>
+            <button class="futuristic-button gh" onclick="githubSearch(3)">"secret" + domain</button>
+            <button class="futuristic-button gh" onclick="githubSearch(4)">"token" + domain</button>
+            <button class="futuristic-button gh" onclick="githubSearch(5)">.env file mentions</button>
+            <button class="futuristic-button gh" onclick="githubSearch(6)">RSA private key blocks</button>
+            <button class="futuristic-button gh" onclick="githubSearch(7)">OpenSSH private key blocks</button>
+            <button class="futuristic-button gh" onclick="githubSearch(9)">.git-credentials file</button>
+            <button class="futuristic-button gh" onclick="githubSearch(8)">.npmrc auth token</button>
+            <button class="futuristic-button gh" onclick="githubSearch(18)">.bash_history file</button>
+            <button class="futuristic-button gh" onclick="githubSearch(10)">wp-config.php in repo</button>
+            <button class="futuristic-button gh" onclick="githubSearch(11)">Django SECRET_KEY in repo</button>
+            <button class="futuristic-button gh" onclick="githubSearch(12)">Generic "credentials" file</button>
+            <button class="futuristic-button gh" onclick="githubSearch(16)">config.json db_password</button>
+            <button class="futuristic-button gh" onclick="githubSearch(17)">SMTP password leak</button>
+            <button class="futuristic-button gh" onclick="githubSearch(13)">SQL dump files (.sql)</button>
+            <button class="futuristic-button gh" onclick="githubSearch(14)">AWS key pattern in JSON</button>
+            <button class="futuristic-button gh" onclick="githubSearch(15)">docker-compose.yml mentions</button>
+        </div>
+    </div>
+
+    <!-- FOFA / Censys -->
+    <div class="section" id="fofa">
+        <div class="section-header">
+            <h2>FOFA &amp; Censys Dorks</h2>
+            <span class="section-count">6 queries</span>
+            <span class="section-sub fofa">opens fofa.info</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button fofa" onclick="fofaSearch(1)">FOFA: domain match</button>
+            <button class="futuristic-button fofa" onclick="fofaSearch(2)">FOFA: host match</button>
+            <button class="futuristic-button fofa" onclick="fofaSearch(3)">FOFA: cert match</button>
+            <button class="futuristic-button fofa" onclick="fofaSearch(4)">FOFA: domain + login title</button>
+            <button class="futuristic-button fofa" onclick="fofaSearch(5)">FOFA: domain + open RDP</button>
+            <button class="futuristic-button fofa" onclick="fofaSearch(6)">FOFA: domain + JBoss app</button>
+        </div>
+    </div>
+
+    <!-- Custom Builder -->
+    <div class="section" id="custom">
+        <div class="section-header">
+            <h2>Custom Dork Builder</h2>
+            <span class="section-count">build your own</span>
+        </div>
+        <div class="custom-box">
+            <select id="custom-engine">
+                <option value="google">Google</option>
+                <option value="bing">Bing</option>
+                <option value="duck">DuckDuckGo</option>
+                <option value="yandex">Yandex</option>
+                <option value="shodan">Shodan</option>
+                <option value="github">GitHub Code</option>
+                <option value="censys">Censys</option>
+                <option value="fofa">FOFA</option>
+            </select>
+            <select id="custom-op">
+                <option value="site">site:</option>
+                <option value="inurl">inurl:</option>
+                <option value="intitle">intitle:</option>
+                <option value="intext">intext:</option>
+                <option value="filetype">filetype:</option>
+                <option value="ext">ext:</option>
+                <option value="hostname">hostname: (shodan)</option>
+                <option value="ssl">ssl: (shodan)</option>
+                <option value="none">no operator</option>
+            </select>
+            <input type="text" id="custom-val" placeholder='extra terms, e.g. "admin panel" or port:8080'>
+            <button onclick="customSearch()">Run Query</button>
         </div>
     </div>
 
