@@ -222,6 +222,7 @@
         .section-sub.gh { color: #8b8bff; border-color: rgba(139,139,255,0.35); }
         .section-sub.shodan { color: var(--accent3); border-color: rgba(77,158,255,0.35); }
         .section-sub.fofa { color: #ff8fd0; border-color: rgba(255,143,208,0.35); }
+        .section-sub.osint { color: #5fffb0; border-color: rgba(95,255,176,0.35); }
 
         /* ── button grid ── */
         .btn-grid {
@@ -273,6 +274,7 @@
         .futuristic-button.gh:hover::before { background: #8b8bff; }
         .futuristic-button.shodan:hover::before { background: var(--accent3); }
         .futuristic-button.fofa:hover::before { background: #ff8fd0; }
+        .futuristic-button.osint:hover::before { background: #5fffb0; }
 
         /* ── custom query box ── */
         .custom-box {
@@ -575,6 +577,56 @@
             openSearch('fofa', q);
         }
 
+        /* ── direct OSINT source links (no query syntax, just deep-link to the tool) ── */
+        function osintSource(type) {
+            var t = getTarget();
+            if (!t) return;
+            var url;
+            switch (type) {
+                case 'hackertarget-dns':      url = 'https://hackertarget.com/dns-lookup/?theyrhere=' + encodeURIComponent(t); break;
+                case 'hackertarget-rev':      url = 'https://hackertarget.com/reverse-dns-lookup/'; break;
+                case 'hackertarget-trace':    url = 'https://hackertarget.com/network-tools/'; break;
+                case 'hackertarget-zone':     url = 'https://hackertarget.com/zone-transfer/'; break;
+                case 'hackertarget-whois':    url = 'https://hackertarget.com/whois-lookup/'; break;
+                case 'virustotal':            url = 'https://www.virustotal.com/gui/domain/' + encodeURIComponent(t) + '/relations'; break;
+                case 'virustotal-details':    url = 'https://www.virustotal.com/gui/domain/' + encodeURIComponent(t) + '/details'; break;
+                case 'securitytrails':        url = 'https://securitytrails.com/domain/' + encodeURIComponent(t) + '/dns'; break;
+                case 'dnsdumpster':           url = 'https://dnsdumpster.com/'; break;
+                case 'urlscan':               url = 'https://urlscan.io/search/#domain%3A' + encodeURIComponent(t); break;
+                case 'urlscan-live':          url = 'https://urlscan.io/search/#page.domain%3A' + encodeURIComponent(t); break;
+                case 'otx':                   url = 'https://otx.alienvault.com/indicator/hostname/' + encodeURIComponent(t); break;
+                case 'builtwith':             url = 'https://builtwith.com/' + encodeURIComponent(t); break;
+                case 'wappalyzer':            url = 'https://www.wappalyzer.com/lookup/' + encodeURIComponent(t) + '/'; break;
+                case 'spyse':                 url = 'https://search.censys.io/search?resource=hosts&q=' + encodeURIComponent(t); break;
+                case 'viewdns-ip':            url = 'https://viewdns.info/iphistory/?domain=' + encodeURIComponent(t); break;
+                case 'viewdns-reverseip':     url = 'https://viewdns.info/reverseip/?host=' + encodeURIComponent(t) + '&t=1'; break;
+                case 'viewdns-portscan':      url = 'https://viewdns.info/portscan/?host=' + encodeURIComponent(t); break;
+                case 'viewdns-whois':         url = 'https://viewdns.info/whois/?domain=' + encodeURIComponent(t); break;
+                case 'mxtoolbox':             url = 'https://mxtoolbox.com/SuperTool.aspx?action=mx%3a' + encodeURIComponent(t) + '&run=toolpage'; break;
+                case 'dnslytics':             url = 'https://dnslytics.com/domain/' + encodeURIComponent(t); break;
+                case 'sublist3r-equiv':       url = 'https://dnsdumpster.com/'; break;
+                case 'wayback-machine':       url = 'https://web.archive.org/web/' + encodeURIComponent(t); break;
+                case 'archive-today':         url = 'https://archive.ph/' + encodeURIComponent(t); break;
+                case 'whoisxml':              url = 'https://www.whois.com/whois/' + encodeURIComponent(t); break;
+                case 'robtex':                url = 'https://www.robtex.com/dns-lookup/' + encodeURIComponent(t); break;
+                case 'pentest-tools':         url = 'https://pentest-tools.com/information-gathering/find-subdomains-of-domain'; break;
+                case 'netcraft':              url = 'https://sitereport.netcraft.com/?url=' + encodeURIComponent(t); break;
+                case 'crt-sh':                url = 'https://crt.sh/?q=%25.' + encodeURIComponent(t); break;
+                case 'wayback-cdx-all':       url = 'https://web.archive.org/cdx/search/cdx?url=*.' + encodeURIComponent(t) + '/*&output=text&fl=original&collapse=urlkey'; break;
+                case 'fullhunt':              url = 'https://fullhunt.io/'; break;
+                case 'ipinfo':                url = 'https://ipinfo.io/' + encodeURIComponent(t); break;
+                case 'greynoise':             url = 'https://viz.greynoise.io/'; break;
+                case 'leakix':                url = 'https://leakix.net/search?scope=leak&q=' + encodeURIComponent(t); break;
+                case 'binaryedge':            url = 'https://app.binaryedge.io/services/query?query=domain%3A' + encodeURIComponent(t); break;
+                case 'haveibeenpwned-domain': url = 'https://haveibeenpwned.com/DomainSearch'; break;
+                case 'intelx':                url = 'https://intelx.io/?did=&s=' + encodeURIComponent(t); break;
+                case 'dehashed':              url = 'https://dehashed.com/search?query=' + encodeURIComponent(t); break;
+                case 'wayback-urls':          url = 'http://web.archive.org/cdx/search/cdx?url=' + encodeURIComponent(t) + '&matchType=domain&output=text&fl=original&collapse=urlkey'; break;
+                default: return;
+            }
+            window.open(url, '_blank');
+        }
+
         /* ── custom dork builder ── */
         function customSearch() {
             var t = getTarget();
@@ -601,7 +653,7 @@
         <div class="logo-block">
             BugBounty Search Engine
         </div>
-        <span class="tag">v2.0</span>
+        <span class="tag">v3.0</span>
         <span class="tag warn">authorized use only</span>
     </div>
     <span class="tag">MILANG</span>
@@ -633,6 +685,7 @@
     <a class="nav-chip" href="#shodan">Shodan Dorks</a>
     <a class="nav-chip" href="#github">GitHub Dorks</a>
     <a class="nav-chip" href="#fofa">FOFA / Censys</a>
+    <a class="nav-chip" href="#osint">OSINT Sources</a>
     <a class="nav-chip" href="#custom">Custom Builder</a>
 </div>
 
@@ -915,6 +968,52 @@
             <button class="futuristic-button fofa" onclick="fofaSearch(4)">FOFA: domain + login title</button>
             <button class="futuristic-button fofa" onclick="fofaSearch(5)">FOFA: domain + open RDP</button>
             <button class="futuristic-button fofa" onclick="fofaSearch(6)">FOFA: domain + JBoss app</button>
+        </div>
+    </div>
+
+    <!-- External OSINT Sources -->
+    <div class="section" id="osint">
+        <div class="section-header">
+            <h2>External OSINT Sources</h2>
+            <span class="section-count">35 deep-links</span>
+            <span class="section-sub osint">opens each tool directly</span>
+        </div>
+        <div class="btn-grid">
+            <button class="futuristic-button osint" onclick="osintSource('hackertarget-dns')">HackerTarget: DNS Lookup</button>
+            <button class="futuristic-button osint" onclick="osintSource('hackertarget-whois')">HackerTarget: WHOIS</button>
+            <button class="futuristic-button osint" onclick="osintSource('hackertarget-zone')">HackerTarget: Zone Transfer</button>
+            <button class="futuristic-button osint" onclick="osintSource('hackertarget-trace')">HackerTarget: Network Tools</button>
+            <button class="futuristic-button osint" onclick="osintSource('virustotal')">VirusTotal: Relations</button>
+            <button class="futuristic-button osint" onclick="osintSource('virustotal-details')">VirusTotal: Details</button>
+            <button class="futuristic-button osint" onclick="osintSource('securitytrails')">SecurityTrails: DNS History</button>
+            <button class="futuristic-button osint" onclick="osintSource('dnsdumpster')">DNSDumpster</button>
+            <button class="futuristic-button osint" onclick="osintSource('urlscan')">urlscan.io: Domain Search</button>
+            <button class="futuristic-button osint" onclick="osintSource('urlscan-live')">urlscan.io: Page Domain</button>
+            <button class="futuristic-button osint" onclick="osintSource('otx')">AlienVault OTX</button>
+            <button class="futuristic-button osint" onclick="osintSource('builtwith')">BuiltWith: Tech Stack</button>
+            <button class="futuristic-button osint" onclick="osintSource('wappalyzer')">Wappalyzer Lookup</button>
+            <button class="futuristic-button osint" onclick="osintSource('netcraft')">Netcraft Site Report</button>
+            <button class="futuristic-button osint" onclick="osintSource('viewdns-ip')">ViewDNS: IP History</button>
+            <button class="futuristic-button osint" onclick="osintSource('viewdns-reverseip')">ViewDNS: Reverse IP</button>
+            <button class="futuristic-button osint" onclick="osintSource('viewdns-portscan')">ViewDNS: Port Scan</button>
+            <button class="futuristic-button osint" onclick="osintSource('viewdns-whois')">ViewDNS: WHOIS</button>
+            <button class="futuristic-button osint" onclick="osintSource('mxtoolbox')">MXToolbox: MX Lookup</button>
+            <button class="futuristic-button osint" onclick="osintSource('dnslytics')">DNSlytics</button>
+            <button class="futuristic-button osint" onclick="osintSource('robtex')">Robtex DNS Lookup</button>
+            <button class="futuristic-button osint" onclick="osintSource('crt-sh')">crt.sh Certificate Search</button>
+            <button class="futuristic-button osint" onclick="osintSource('wayback-machine')">Wayback Machine</button>
+            <button class="futuristic-button osint" onclick="osintSource('wayback-cdx-all')">Wayback CDX: All Subdomains</button>
+            <button class="futuristic-button osint" onclick="osintSource('wayback-urls')">Wayback CDX: All URLs</button>
+            <button class="futuristic-button osint" onclick="osintSource('archive-today')">archive.today</button>
+            <button class="futuristic-button osint" onclick="osintSource('whoisxml')">Whois.com Lookup</button>
+            <button class="futuristic-button osint" onclick="osintSource('ipinfo')">IPinfo Lookup</button>
+            <button class="futuristic-button osint" onclick="osintSource('leakix')">LeakIX Search</button>
+            <button class="futuristic-button osint" onclick="osintSource('binaryedge')">BinaryEdge Search</button>
+            <button class="futuristic-button osint" onclick="osintSource('intelx')">IntelX Search</button>
+            <button class="futuristic-button osint" onclick="osintSource('haveibeenpwned-domain')">HaveIBeenPwned Domain Search</button>
+            <button class="futuristic-button osint" onclick="osintSource('greynoise')">GreyNoise Visualizer</button>
+            <button class="futuristic-button osint" onclick="osintSource('fullhunt')">FullHunt</button>
+            <button class="futuristic-button osint" onclick="osintSource('pentest-tools')">Pentest-Tools: Subdomain Finder</button>
         </div>
     </div>
 
